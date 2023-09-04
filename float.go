@@ -50,9 +50,10 @@ func (r *Rand) float32src() float32 {
 			frac = uint32(i >> (l - shift32 - 1))
 			break
 		} else if l > 0 {
-			frac = uint32(i << (shift32 - l + 1))
-			i = r.src.Int63() >> (63 - shift32 + l - 1)
-			frac |= uint32(i)
+			s := shift32 - l + 1
+			frac = uint32(i << s)
+			i = r.s64.Int63()
+			frac |= uint32(i) & (1<<s - 1)
 			break
 		}
 	}
@@ -75,9 +76,10 @@ func (r *Rand) float32s64() float32 {
 			frac = uint32(i >> (l - shift32 - 1))
 			break
 		} else if l > 0 {
-			frac = uint32(i << (shift32 - l + 1))
-			i = r.s64.Uint64() >> (64 - shift32 + l - 1)
-			frac |= uint32(i)
+			s := shift32 - l + 1
+			frac = uint32(i << s)
+			i = r.s64.Uint64()
+			frac |= uint32(i) & (1<<s - 1)
 			break
 		}
 	}
@@ -100,9 +102,10 @@ func (r *Rand) float64src() float64 {
 			frac = uint64(i >> (l - shift64 - 1))
 			break
 		} else if l > 0 {
-			frac = uint64(i << (shift64 - l + 1))
-			i = r.src.Int63() >> (63 - shift64 + l - 1)
-			frac |= uint64(i)
+			s := shift64 - l + 1
+			frac = uint64(i << s)
+			i = r.s64.Int63()
+			frac |= uint64(i) & (1<<s - 1)
 			break
 		}
 	}
@@ -125,9 +128,10 @@ func (r *Rand) float64s64() float64 {
 			frac = uint64(i >> (l - shift64 - 1))
 			break
 		} else if l > 0 {
-			frac = uint64(i << (shift64 - l + 1))
-			i = r.s64.Uint64() >> (64 - shift64 + l - 1)
-			frac |= uint64(i)
+			s := shift64 - l + 1
+			frac = uint64(i << s)
+			i = r.s64.Uint64()
+			frac |= uint64(i) & (1<<s - 1)
 			break
 		}
 	}
