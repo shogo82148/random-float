@@ -34,7 +34,7 @@ func (oneSource64) Uint64() uint64 { return 1<<64 - 1 }
 
 func TestFloat32(t *testing.T) {
 	r := New(rand.NewSource(42))
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 1e8; i++ {
 		f := r.Float32()
 		if f < 0 || f >= 1 {
 			t.Errorf("invalid range: %x", f)
@@ -78,7 +78,7 @@ func TestFloat32One(t *testing.T) {
 
 func TestFloat64(t *testing.T) {
 	r := New(rand.NewSource(42))
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 1e8; i++ {
 		f := r.Float64()
 		if f < 0 || f >= 1 {
 			t.Errorf("invalid range: %x", f)
@@ -129,6 +129,20 @@ func BenchmarkFloat32(b *testing.B) {
 
 func BenchmarkFloat64(b *testing.B) {
 	r := New(rand.NewSource(42))
+	for i := 0; i < b.N; i++ {
+		r.Float64()
+	}
+}
+
+func BenchmarkRandFloat32(b *testing.B) {
+	r := rand.New(rand.NewSource(42))
+	for i := 0; i < b.N; i++ {
+		r.Float32()
+	}
+}
+
+func BenchmarkRandFloat64(b *testing.B) {
+	r := rand.New(rand.NewSource(42))
 	for i := 0; i < b.N; i++ {
 		r.Float64()
 	}

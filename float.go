@@ -34,59 +34,118 @@ func New(src rand.Source) *Rand {
 	return &Rand{src: src, s64: s64}
 }
 
-type bitsN interface {
-	uint64 | uint32
-}
-
-type intN interface {
-	int64 | uint64
-}
-
-type floatN interface {
-	float64 | float32
-}
-
-type floatNFromBits[B bitsN, F floatN] func(B) F
-
-type srcN[I intN] func() I
-
-func randFloat[I intN, B bitsN, F floatN](src srcN[I], bias, shift, num int, mask B, float floatNFromBits[B, F]) F {
-	var exp = bias - 1
-	var frac B
+func (r *Rand) float32src() float32 {
+	var exp = bias32 - 1
+	var frac uint32
 	for {
-		i := src()
+		i := r.src.Int63()
 		l := bits.Len64(uint64(i))
-		exp -= num - l
+		exp -= 63 - l
 		if exp <= 0 {
-			frac = B(src())
+			frac = uint32(r.src.Int63())
 			exp = 0
 			break
 		}
-		if l > shift {
-			frac = B(i >> (l - shift - 1))
+		if l > shift32 {
+			frac = uint32(i >> (l - shift32 - 1))
 			break
 		} else if l > 0 {
-			frac = B(i << (shift - l + 1))
-			i = src() >> (num - shift + l - 1)
-			frac |= B(i)
+			frac = uint32(i << (shift32 - l + 1))
+			i = r.src.Int63() >> (63 - shift32 + l - 1)
+			frac |= uint32(i)
 			break
 		}
 	}
-	return float(B(exp)<<shift | frac&mask)
+	return math.Float32frombits(uint32(exp)<<shift32 | frac&fracMask32)
+}
+
+func (r *Rand) float32s64() float32 {
+	var exp = bias32 - 1
+	var frac uint32
+	for {
+		i := r.s64.Uint64()
+		l := bits.Len64(i)
+		exp -= 64 - l
+		if exp <= 0 {
+			frac = uint32(r.s64.Uint64())
+			exp = 0
+			break
+		}
+		if l > shift32 {
+			frac = uint32(i >> (l - shift32 - 1))
+			break
+		} else if l > 0 {
+			frac = uint32(i << (shift32 - l + 1))
+			i = r.s64.Uint64() >> (64 - shift32 + l - 1)
+			frac |= uint32(i)
+			break
+		}
+	}
+	return math.Float32frombits(uint32(exp)<<shift32 | frac&fracMask32)
+}
+
+func (r *Rand) float64src() float64 {
+	var exp = bias64 - 1
+	var frac uint64
+	for {
+		i := r.src.Int63()
+		l := bits.Len64(uint64(i))
+		exp -= 63 - l
+		if exp <= 0 {
+			frac = uint64(r.src.Int63())
+			exp = 0
+			break
+		}
+		if l > shift64 {
+			frac = uint64(i >> (l - shift64 - 1))
+			break
+		} else if l > 0 {
+			frac = uint64(i << (shift64 - l + 1))
+			i = r.src.Int63() >> (63 - shift64 + l - 1)
+			frac |= uint64(i)
+			break
+		}
+	}
+	return math.Float64frombits(uint64(exp)<<shift64 | frac&fracMask64)
+}
+
+func (r *Rand) float64s64() float64 {
+	var exp = bias64 - 1
+	var frac uint64
+	for {
+		i := r.s64.Uint64()
+		l := bits.Len64(i)
+		exp -= 64 - l
+		if exp <= 0 {
+			frac = uint64(r.s64.Uint64())
+			exp = 0
+			break
+		}
+		if l > shift64 {
+			frac = uint64(i >> (l - shift64 - 1))
+			break
+		} else if l > 0 {
+			frac = uint64(i << (shift64 - l + 1))
+			i = r.s64.Uint64() >> (64 - shift64 + l - 1)
+			frac |= uint64(i)
+			break
+		}
+	}
+	return math.Float64frombits(uint64(exp)<<shift64 | frac&fracMask64)
 }
 
 func (r *Rand) Float32() float32 {
 	if r.s64 != nil {
-		return randFloat(r.s64.Uint64, bias32, shift32, 64, fracMask32, math.Float32frombits)
+		return r.float32s64()
 	} else {
-		return randFloat(r.src.Int63, bias32, shift32, 63, fracMask32, math.Float32frombits)
+		return r.float32src()
 	}
 }
 
 func (r *Rand) Float64() float64 {
 	if r.s64 != nil {
-		return randFloat(r.s64.Uint64, bias64, shift64, 64, fracMask64, math.Float64frombits)
+		return r.float64s64()
 	} else {
-		return randFloat(r.src.Int63, bias64, shift64, 63, fracMask64, math.Float64frombits)
+		return r.float64src()
 	}
 }
